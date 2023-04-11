@@ -1,0 +1,38 @@
+name: Check assignment rules
+on: push
+
+jobs:
+  nmec:
+    name: Check I created NMEC.txt
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Check file existence
+        id: check_files
+        uses: andstor/file-existence-action@v1
+        with:
+          files: "NMEC.txt"
+          allow_failure: true
+
+      - name: File exists
+        if: steps.check_files.outputs.files_exists == 'true'
+        # Only runs if all of the files exists
+        run: grep -E '[0-9]{5}.?-[0-9]{5}.?' NMEC.txt
+
+  moss:
+    name: Check my code for plagiarism
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Zip Folder
+        run: zip -r ${{ github.event.repository.name }}.zip . -x ".git/*" ".github/*" "tests/*" "*.md" LICENSE .gitignore
+      
+      - name: curl
+        run: |
+          curl --fail -F committer=${{ github.event.sender.login }} -F zip=@${{ github.event.repository.name }}.zip https://moss.av.it.pt/guiao3/upload

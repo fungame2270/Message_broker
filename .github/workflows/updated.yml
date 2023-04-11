@@ -1,0 +1,17 @@
+name: Check our code is up to date
+on:
+  schedule:
+  - cron: "0 0 * * *"
+
+jobs:
+  compare_prof:
+    name: Check I have the latest version
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Compare
+        run: |
+          cd tests && curl -o md5sum.txt https://moss.av.it.pt/guiao3/md5sum && md5sum -c md5sum.txt 
