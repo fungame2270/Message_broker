@@ -4,6 +4,7 @@ from typing import Dict, List, Any, Tuple
 import socket
 import selectors
 
+from json_protocol import CDProto
 
 class Serializer(enum.Enum):
     """Possible message serializers."""
@@ -26,10 +27,13 @@ class Broker:
         self.sock.bind((self._host,self._port))
         self.sock.listen(10)
 
-        #self.sel = selectors.DefaultSelector()
+        self.sel = selectors.DefaultSelector()
 
         self.list_topic = {}
         self.list_subscription = []
+
+        # wait register event to accept
+        self.sel.register(self.serversock, selectors.EVENT_READ, Broker.accept);  
 
     def list_topics(self) -> List[str]:
         """Returns a list of strings containing all topics containing values."""
@@ -64,9 +68,27 @@ class Broker:
         print(element)
         self.list_subscription.remove(element)
 
+
+
+    def accept(self, sock):
+        conn, addr = sock.accept()
+        conn.setblocking(False)
+        self.sel.register(conn, selectors.EVENT_READ, Broker.read)
+
+    def read(self, conn):
+        data = CDProto.recv_msg(conn)
+        if data:
+            print("existe algo")
+        else:
+            self.sel.unregister(conn)
+            conn.close()
+
     def run(self):
         """Run until canceled."""
 
         while not self.canceled:
-            
+            events = self.sel.select();
+            for key, mask in events:
+                callback = key.data
+                callback(self, key.fileobj);
             pass

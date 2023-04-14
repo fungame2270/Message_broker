@@ -4,6 +4,8 @@ from enum import Enum
 from queue import LifoQueue, Empty
 from typing import Any
 
+import socket
+
 
 class MiddlewareType(Enum):
     """Middleware Type."""
@@ -17,9 +19,13 @@ class Queue:
 
     def __init__(self, topic, _type=MiddlewareType.CONSUMER):
         """Create Queue."""
+        self.topic = topic
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
 
     def push(self, value):
         """Sends data to broker."""
+        
 
     def pull(self) -> (str, Any):
         """Receives (topic, data) from broker.
