@@ -28,40 +28,41 @@ class Broker:
 
         #self.sel = selectors.DefaultSelector()
 
-        self.list_topics = {}
-        self.list_subscriptions = []
+        self.list_topic = {}
+        self.list_subscription = []
 
     def list_topics(self) -> List[str]:
         """Returns a list of strings containing all topics containing values."""
-        return self.list_topics.keys()
+        return self.list_topic.keys()
 
     def get_topic(self, topic):
         """Returns the currently stored value in topic."""
-        return self.list_topics.get(topic)
+        return self.list_topic.get(topic)
 
 
     def put_topic(self, topic, value):
         """Store in topic the value."""
-        self.list_topics[topic] = value
+        self.list_topic[topic] = value
 
     def list_subscriptions(self, topic: str) -> List[Tuple[socket.socket, Serializer]]:
         """Provide list of subscribers to a given topic."""
         ret_list = []
-        for element in self.list_subscriptions:
-            if element(2) == topic:
-                ret_list.append((element(0),element(1)))
+        for element in self.list_subscription:
+            if element[0] == topic:
+                ret_list.append((element[1], element[2]))
         return ret_list
 
     def subscribe(self, topic: str, address: socket.socket, _format: Serializer = None):
         """Subscribe to topic by client in address."""
-        self.list_subscriptions.append((address,Serializer,topic))
+        self.list_subscription.append((topic, address, _format))
 
     def unsubscribe(self, topic, address):
         """Unsubscribe to topic by client in address."""
-        for element in self.list_subscriptions:
-            if(element(0) == address and element(2) == topic):
+        for element in self.list_subscription:
+            if(element[0] == topic and element[1] == address):
                 break
-        self.list_subscriptions.pop(element)
+        print(element)
+        self.list_subscription.remove(element)
 
     def run(self):
         """Run until canceled."""
