@@ -4,7 +4,8 @@ from typing import Dict, List, Any, Tuple
 import socket
 import selectors
 
-from json_protocol import CDProto
+from src.json_protocol import CDProto
+from src.middleware import MiddlewareType as MType
 
 class Serializer(enum.Enum):
     """Possible message serializers."""
@@ -33,7 +34,7 @@ class Broker:
         self.list_subscription = []
 
         # wait register event to accept
-        self.sel.register(self.serversock, selectors.EVENT_READ, Broker.accept);  
+        self.sel.register(self.sock, selectors.EVENT_READ, Broker.accept);  
 
     def list_topics(self) -> List[str]:
         """Returns a list of strings containing all topics containing values."""
@@ -69,20 +70,62 @@ class Broker:
         self.list_subscription.remove(element)
 
 
+    # --------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+    # Accept socket
     def accept(self, sock):
         conn, addr = sock.accept()
         conn.setblocking(False)
         self.sel.register(conn, selectors.EVENT_READ, Broker.read)
 
+    # Read user input
     def read(self, conn):
         data = CDProto.recv_msg(conn)
-        if data:
-            print("existe algo")
+
+        if data != None:
+            msg = data.getMessage()
+            
+            # Consumer handling
+            if msg["type"] == MType.CONSUMER.value:
+                
+                print("Consumidor: subscribed to",msg["topic"])
+                topic = msg["topic"]
+                queue = Serializer(msg["queue"])
+                
+                if topic not in self.list_topic:
+                    self.put_topic(topic, None)
+                    
+                self.subscribe(topic, conn, queue)
+
+                if queue == Serializer.JSON:
+                    value = self.get_topic(topic)
+                    msg = CDProto.message(value, topic, msg["type"])
+                    CDProto.send_msg(conn, msg)
+                
+                #if msg["value"]
+                #    self.subscribe(topic, conn)
+                #else
+                #    self.unsubscribe(topic, conn)
+            
+            # Producer handling
+            else:
+                print("Produtor: send topic to",msg["topic"])
+                topic = msg["topic"]
+                value = msg["value"]
+                self.put_topic(topic, value)
+                
+                for sub in self.list_subscription:
+                    if topic == sub[0]:
+                        msg = CDProto.message(value, topic, MType.CONSUMER.value)
+                        CDProto.send_msg(sub[1], msg)
+                        
         else:
             self.sel.unregister(conn)
             conn.close()
 
+    # --------------------------------------------------------------------------------------------------------------------------------------------------------------
+    
+    # Wait for user event
     def run(self):
         """Run until canceled."""
 

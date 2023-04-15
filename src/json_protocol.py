@@ -12,27 +12,28 @@ class Message:
     def getMessage(self):
         return self.message
     
-class JoinMessage(Message):
-    #Message to join a chat channel.
-    def __init__(self, command, channel):
-        self.message = {"command":command};
-        self.message["channel"] = channel;
+class SubscribeMessage(Message):
+    #Message to join a topic channe
+    def __init__(self, command, topic, tipo,queue):
+        self.message = {"command":command}
+        self.message["topic"] = topic
+        self.message["type"] = tipo
+        self.message["queue"] = queue
 
 class RegisterMessage(Message):
     #Message to register username in the server.
     def __init__(self, command, user):
-        self.message = {"command":command};
-        self.message["user"] = user;
+        self.message = {"command":command}
+        self.message["user"] = user
     
 class TextMessage(Message):
     #Message to chat with other clients.
-    def __init__(self, command, message, channel, ts):
-        self.message = {"command":command};
-        self.message["message"] = message;
-        # if omitted then we have to not include it (due to number of parameters)
-        if channel is not None:
-            self.message["channel"] = channel;
-        self.message["ts"] = ts;
+    def __init__(self, command, message, topic, tipo):
+        self.message = {"command":command}
+        self.message["value"] = message
+        self.message["topic"] = topic
+        self.message["type"] = tipo
+        
 
 class CDProto:
     #Computação Distribuida Protocol.
@@ -40,32 +41,25 @@ class CDProto:
     @classmethod
     def register(cls, username: str) -> RegisterMessage:
         # Creates a RegisterMessage object and returns object
-        return RegisterMessage("register", username);
+        return RegisterMessage("register", username)
 
     @classmethod
-    def join(cls, channel: str) -> JoinMessage:
+    def subscribe(cls, topic: str, tipo,queue) -> SubscribeMessage:
         # Creates a JoinMessage object and returns object
-        return JoinMessage("join", channel)
+        return SubscribeMessage("subscribe", topic, tipo,queue)
 
     @classmethod
-    def message(cls, message: str, channel: str = None) -> TextMessage:
+    def message(cls, value: str, topic: str, tipo: str) -> TextMessage:
         # Creates a TextMessage object and returns object
-        return TextMessage("message", message, channel, int(datetime.now().timestamp()))
+        return TextMessage("value", value, topic, tipo)
 
     @classmethod
     def send_msg(cls, connection: socket, msg: Message):
         #Sends through a connection a Message object.
 
-        # when sending a message, we first send the size of the string
-        # and to do so, we use 2 bytes
-        # converting the size from decimal to binary and then to 16 bits
-        # também podemos utilizar o ASCII
-
         messageToSend = json.dumps(msg.getMessage());
         messageSize = len(messageToSend.encode());
 
-        # l = 34
-        # arr = l.to_bytes(length = 2, byteorder = 'big')
         byteMessage = messageSize.to_bytes(2, 'big');
         connection.sendall(byteMessage + messageToSend.encode())
 
@@ -73,7 +67,6 @@ class CDProto:
     def recv_msg(cls, connection: socket) -> Message:
         #Receives through a connection a Message object.
 
-        # b = int.from_bytes(arr, byteorder = 'big')
         messageSize = int.from_bytes(connection.recv(2), 'big')
         
         if messageSize == 0:
@@ -89,14 +82,11 @@ class CDProto:
         if message["command"] == "register":
             return CDProto.register(message["user"]);
     
-        elif message["command"] == "join":
-            return CDProto.join(message["channel"]);
+        elif message["command"] == "subscribe":
+            return CDProto.subscribe(message["topic"], message["type"],message["queue"]);
     
-        elif message["command"] == "message":
-            if "channel" in message:
-                return CDProto.message(message["message"], message["channel"]);
-            else:
-                return CDProto.message(message["message"])
+        elif message["command"] == "value":
+            return CDProto.message(message["value"], message["topic"], message["type"])
 
 
 class CDProtoBadFormat(Exception):
