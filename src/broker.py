@@ -4,7 +4,7 @@ from typing import Dict, List, Any, Tuple
 import socket
 import selectors
 
-from src.json_protocol import CDProto
+from src.protocol import CDProto
 from src.middleware import MiddlewareType as MType
 
 class Serializer(enum.Enum):
@@ -25,7 +25,7 @@ class Broker:
         self._host = "localhost"
         self._port = 5000
         self.sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        self.sock.bind((self._host,self._port))
+        self.sock.bind((self._host, self._port))
         self.sock.listen(10)
 
         self.sel = selectors.DefaultSelector()
@@ -90,22 +90,16 @@ class Broker:
                 
                 print("Consumidor: subscribed to",msg["topic"])
                 topic = msg["topic"]
-                queue = Serializer(msg["queue"])
+                serialize = Serializer(msg["serialize"])
                 
                 if topic not in self.list_topic:
                     self.put_topic(topic, None)
                     
-                self.subscribe(topic, conn, queue)
-
-                if queue == Serializer.JSON:
-                    value = self.get_topic(topic)
-                    msg = CDProto.message(value, topic, msg["type"])
-                    CDProto.send_msg(conn, msg)
-                
-                #if msg["value"]
-                #    self.subscribe(topic, conn)
-                #else
-                #    self.unsubscribe(topic, conn)
+                self.subscribe(topic, conn, serialize)
+                print(self.list_subscriptions(topic))
+                value = self.get_topic(topic)
+                CDProto.send_msg(conn, value, serialize)
+                print('s')             
             
             # Producer handling
             else:
@@ -116,8 +110,9 @@ class Broker:
                 
                 for sub in self.list_subscription:
                     if topic == sub[0]:
-                        msg = CDProto.message(value, topic, MType.CONSUMER.value)
-                        CDProto.send_msg(sub[1], msg)
+                        print('send to',sub[1],msg)
+                        msg = CDProto.message(value, topic, MType.CONSUMER.value, sub[2])
+                        CDProto.send_msg(sub[1], msg, sub[2])
                         
         else:
             self.sel.unregister(conn)

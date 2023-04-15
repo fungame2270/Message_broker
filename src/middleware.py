@@ -4,7 +4,8 @@ from enum import Enum
 from queue import LifoQueue, Empty
 from typing import Any
 
-from src.json_protocol import *
+from src.protocol import CDProto
+from src.protocols.Serializer import Serializer
 
 import socket
 
@@ -25,7 +26,6 @@ class Queue:
         self._tipo = _type
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect(('localhost', 5000))
-
 
     def push(self, value):
         """Sends data to broker."""
@@ -48,21 +48,22 @@ class JSONQueue(Queue):
     def __init__(self, topic, _type=MiddlewareType.CONSUMER):
         super().__init__(topic,_type)
         if _type == MiddlewareType.CONSUMER:
-            msg = CDProto.subscribe(topic, _type.value, 0)
-            CDProto.send_msg(self.sock, msg)
+            msg = CDProto.subscribe(topic, _type.value, Serializer.JSON.value)
+            CDProto.send_msg(self.sock, msg, Serializer.JSON)
 
     def push(self, value):
         # Producer sends data to broker.
-        message = CDProto.message(value, self.topic, self._tipo.value)
-        CDProto.send_msg(self.sock, message)
-        pass
+        message = CDProto.message(value, self.topic, self._tipo.value, Serializer.JSON.value)
+        CDProto.send_msg(self.sock, message, Serializer.JSON)
 
     def pull(self) -> (str, Any):
         # Consumer receives (topic, data) from broker.
         data = CDProto.recv_msg(self.sock)
         msg = data.getMessage()
+
         topic = msg["topic"]
         value = msg["value"]
+        
         return (topic, value)
 
 class XMLQueue(Queue):
@@ -79,10 +80,22 @@ class XMLQueue(Queue):
 class PickleQueue(Queue):
     """Queue implementation with Pickle based serialization."""
 
+    def __init__(self, topic, _type=MiddlewareType.CONSUMER):
+        super().__init__(topic,_type)
+        if _type == MiddlewareType.CONSUMER:
+            msg = CDProto.subscribe(topic, _type.value, Serializer.PICKLE.value)
+            CDProto.send_msg(self.sock, msg, Serializer.PICKLE)
+
     def push(self, value):
-        #Sends data to broker.
+        # Producer sends data to broker.
+        message = CDProto.message(value, self.topic, self._tipo.value, Serializer.PICKLE.value)
+        CDProto.send_msg(self.sock, message, Serializer.PICKLE)
         pass
 
     def pull(self) -> (str, Any):
-        #Receives (topic, data) from broker.
-        pass
+        # Consumer receives (topic, data) from broker.
+        data = CDProto.recv_msg(self.sock)
+        msg = data.getMessage()
+        topic = msg["topic"]
+        value = msg["value"]
+        return (topic, value)
