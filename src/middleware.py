@@ -25,7 +25,6 @@ class Queue:
 
     def push(self, value):
         """Sends data to broker."""
-        
 
     def pull(self) -> (str, Any):
         """Receives (topic, data) from broker.
@@ -41,11 +40,30 @@ class Queue:
 
 class JSONQueue(Queue):
     """Queue implementation with JSON based serialization."""
+    def push(self, value):
+        """Sends data to broker."""
 
+    def pull(self) -> (str, Any):
+        """Receives (topic, data) from broker.
+
+        Should BLOCK the consumer!"""
 
 class XMLQueue(Queue):
     """Queue implementation with XML based serialization."""
+    def push(self, value):
+        """Sends data to broker."""
 
+    def pull(self) -> (str, Any):
+        """Receives (topic, data) from broker.
+
+        Should BLOCK the consumer!"""
 
 class PickleQueue(Queue):
     """Queue implementation with Pickle based serialization."""
+    def push(self, value):
+        """Sends data to broker."""
+
+    def pull(self) -> (str, Any):
+        """Receives (topic, data) from broker.
+
+        Should BLOCK the consumer!"""
