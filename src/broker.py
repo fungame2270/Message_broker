@@ -38,7 +38,7 @@ class Broker:
 
     def list_topics(self) -> List[str]:
         """Returns a list of strings containing all topics containing values."""
-        return self.list_topic.keys()
+        return list(self.list_topic.keys())
 
     def get_topic(self, topic):
         """Returns the currently stored value in topic."""

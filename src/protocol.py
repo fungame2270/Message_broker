@@ -32,6 +32,7 @@ class SubscribeMessage(Message):
 class UnsubscribeMessage(Message):
     #Message to join a topic
     def __init__(self, command, topic, tipo, serialize):
+        self.serialize = serialize
         self.message = {"command":command}
         self.message["topic"] = topic
         self.message["type"] = tipo
@@ -40,6 +41,7 @@ class UnsubscribeMessage(Message):
 class TextMessage(Message):
     #Message to chat with other clients.
     def __init__(self, command, message, topic, tipo, serialize):
+        self.serialize = serialize
         self.message = {"command":command}
         self.message["value"] = message
         self.message["topic"] = topic
