@@ -90,16 +90,16 @@ class Broker:
                 
                 print("Consumidor: subscribed to",msg["topic"])
                 topic = msg["topic"]
-                serialize = Serializer(msg["serialize"])
-                
+                serialize = msg["serialize"]
+
                 if topic not in self.list_topic:
                     self.put_topic(topic, None)
                     
                 self.subscribe(topic, conn, serialize)
                 print(self.list_subscriptions(topic))
-                value = self.get_topic(topic)
-                CDProto.send_msg(conn, value, serialize)
-                print('s')             
+                #value = self.get_topic(topic)
+                #msg = CDProto.message(value, topic, MType.CONSUMER.value, serialize)
+                #CDProto.send_msg(conn, msg, serialize)         
             
             # Producer handling
             else:

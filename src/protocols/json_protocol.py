@@ -12,18 +12,19 @@ class Json_P:
 
         serialize = Serializer.JSON.value
         serialize = serialize.to_bytes(1, 'big')
+
         messageToSend = json.dumps(msg.getMessage());
         messageSize = len(messageToSend.encode());
 
         byteMessage = messageSize.to_bytes(2, 'big');
-        connection.sendall(serialize + byteMessage + messageToSend.encode())
+
+        connection.send(serialize + byteMessage + messageToSend.encode())
 
     @classmethod
     def recv_msg(cls, connection: socket):
         #Receives through a connection a Message object.
+        messageSize = int.from_bytes(connection.recv(2), 'big')  
 
-        messageSize = int.from_bytes(connection.recv(2), 'big')
-        
         if messageSize == 0:
             return
 

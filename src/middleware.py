@@ -49,12 +49,12 @@ class JSONQueue(Queue):
         super().__init__(topic,_type)
         if _type == MiddlewareType.CONSUMER:
             msg = CDProto.subscribe(topic, _type.value, Serializer.JSON.value)
-            CDProto.send_msg(self.sock, msg, Serializer.JSON)
+            CDProto.send_msg(self.sock, msg, Serializer.JSON.value)
 
     def push(self, value):
         # Producer sends data to broker.
         message = CDProto.message(value, self.topic, self._tipo.value, Serializer.JSON.value)
-        CDProto.send_msg(self.sock, message, Serializer.JSON)
+        CDProto.send_msg(self.sock, message, Serializer.JSON.value)
 
     def pull(self) -> (str, Any):
         # Consumer receives (topic, data) from broker.
@@ -84,18 +84,20 @@ class PickleQueue(Queue):
         super().__init__(topic,_type)
         if _type == MiddlewareType.CONSUMER:
             msg = CDProto.subscribe(topic, _type.value, Serializer.PICKLE.value)
-            CDProto.send_msg(self.sock, msg, Serializer.PICKLE)
+            CDProto.send_msg(self.sock, msg, Serializer.PICKLE.value)
 
     def push(self, value):
         # Producer sends data to broker.
         message = CDProto.message(value, self.topic, self._tipo.value, Serializer.PICKLE.value)
-        CDProto.send_msg(self.sock, message, Serializer.PICKLE)
+        CDProto.send_msg(self.sock, message, Serializer.PICKLE.value)
         pass
 
     def pull(self) -> (str, Any):
         # Consumer receives (topic, data) from broker.
         data = CDProto.recv_msg(self.sock)
         msg = data.getMessage()
+
         topic = msg["topic"]
         value = msg["value"]
+
         return (topic, value)

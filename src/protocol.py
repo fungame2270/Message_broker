@@ -59,26 +59,23 @@ class CDProto:
     
     @classmethod
     def send_msg(cls, connection: socket, msg: Message, serialize):
-        if serialize == Serializer.JSON:
+        # Choose format
+        if serialize == Serializer.JSON.value:
             Json_P.send_msg(connection, msg)
-        elif serialize == Serializer.PICKLE:
+        elif serialize == Serializer.PICKLE.value:
             Pickle_P.send_msg(connection, msg)
-        #elif serialize == 2:
-            #Xml_P.send_msg(connection, msg)
 
     @classmethod
     def recv_msg(cls, connection: socket) -> Message:
-        print(connection)
-        var = connection.recv(1)
-        print(var)
-        serialize = int.from_bytes(var, 'big')
+        serialize = int.from_bytes(connection.recv(1), 'big')
+
         if serialize == Serializer.JSON.value:
             message = Json_P.recv_msg(connection)
         elif serialize == Serializer.PICKLE.value:
             message = Pickle_P.recv_msg(connection)
-        #elif serialize == 2:
-            #Xml_P.recv_msg(connection)
 
+        
+       
         if message == None:
             return None
 
