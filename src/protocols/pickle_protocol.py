@@ -16,7 +16,7 @@ class Pickle_P:
         messageSize = len(messageToSend)
 
         byteMessage = messageSize.to_bytes(2, 'big');
-        connection.sendall(serialize + byteMessage + messageToSend)
+        connection.send(serialize + byteMessage + messageToSend)
 
     @classmethod
     def recv_msg(cls, connection: socket):
