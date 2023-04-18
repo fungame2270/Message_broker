@@ -5,6 +5,7 @@ from queue import LifoQueue, Empty
 from typing import Any
 
 from src.protocol import CDProto
+from src.protocols.xml_protocol import Xml_P
 from src.protocols.Serializer import Serializer
 
 import socket
@@ -36,6 +37,7 @@ class Queue:
         Should BLOCK the consumer!"""
 
     def list_topics(self, callback: Callable):
+        #callback funçao a ser chamada qunado lista de topicos vier
         """Lists all topics available in the broker."""
 
     def cancel(self):
@@ -67,19 +69,39 @@ class JSONQueue(Queue):
         return (topic, value)
 
     def cancel(self):
+        # Cancel subscription
         message = CDProto.unsubscribe(self._tipo.value, Serializer.JSON.value)
         CDProto.send_msg(self.sock, message, Serializer.JSON.value)
 
 class XMLQueue(Queue):
     """Queue implementation with XML based serialization."""
 
+    def __init__(self, topic, _type=MiddlewareType.CONSUMER):
+        super().__init__(topic,_type)
+        if _type == MiddlewareType.CONSUMER:
+            msg = Xml_P.subscribe(topic, _type.value, Serializer.XML.value)
+            CDProto.send_msg(self.sock, msg, Serializer.XML.value)
+
     def push(self, value):
-        #Sends data to broker.
+        # Producer sends data to broker.
+        message = CDProto.message(value, self.topic, self._tipo.value, Serializer.PICKLE.value)
+        CDProto.send_msg(self.sock, message, Serializer.XML.value)
         pass
 
     def pull(self) -> (str, Any):
-        #Receives (topic, data) from broker.
-        pass
+        # Consumer receives (topic, data) from broker.
+        data = CDProto.recv_msg(self.sock)
+        msg = data.getMessage()
+
+        topic = msg["topic"]
+        value = msg["value"]
+
+        return (topic, value)
+
+    def cancel(self):
+        # Cancel subscription
+        message = Xml_P.unsubscribe(Serializer.XML.value)
+        CDProto.send_msg(self.sock, message, Serializer.XML.value)
 
 class PickleQueue(Queue):
     """Queue implementation with Pickle based serialization."""
@@ -107,5 +129,6 @@ class PickleQueue(Queue):
         return (topic, value)
 
     def cancel(self):
+        # Cancel subscription
         message = CDProto.unsubscribe(Serializer.PICKLE.value)
         CDProto.send_msg(self.sock, message, Serializer.PICKLE.value)

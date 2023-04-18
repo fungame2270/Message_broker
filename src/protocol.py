@@ -1,7 +1,9 @@
 from src.protocols.json_protocol import Json_P
 from src.protocols.pickle_protocol import Pickle_P
+from src.protocols.xml_protocol import Xml_P
 import json
 import pickle
+import xml.etree.ElementTree as xml
 import socket
 
 from src.protocols.Serializer import Serializer
@@ -14,8 +16,6 @@ class Message:
             return json.dumps(self.getMessage())
         elif self.serialize == 1:
             return pickle.dumps(self.getMessage())
-        #elif self.serialize == 2:
-        #    return xml.dumps(self.getMessage())
         
     def getMessage(self):
         return self.message
@@ -70,6 +70,8 @@ class CDProto:
             Json_P.send_msg(connection, msg)
         elif serialize == Serializer.PICKLE.value:
             Pickle_P.send_msg(connection, msg)
+        else:
+            Xml_P.send_msg(connection, msg)
 
     @classmethod
     def recv_msg(cls, connection: socket) -> Message:
@@ -80,7 +82,7 @@ class CDProto:
         elif serialize == Serializer.PICKLE.value:
             message = Pickle_P.recv_msg(connection)
         else:
-            print("XML") 
+            message = Xml_P.recv_msg(connection)
 
         
        
