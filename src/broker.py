@@ -66,7 +66,13 @@ class Broker:
         for element in self.list_subscription:
             if(element[0] == topic and element[1] == address):
                 break
-        print(element)
+        self.list_subscription.remove(element)
+
+    def unsubscribeConn(self, address):
+        """Unsubscribe to topic by client in address."""
+        for element in self.list_subscription:
+            if(element[1] == address):
+                break
         self.list_subscription.remove(element)
 
 
@@ -88,18 +94,21 @@ class Broker:
             # Consumer handling
             if msg["type"] == MType.CONSUMER.value:
                 
-                print("Consumidor: subscribed to",msg["topic"])
-                topic = msg["topic"]
-                serialize = msg["serialize"]
+                # Unsubscribe handling
+                if msg["command"] == "unsubscribe":
+                    self.unsubscribeConn(conn)
+                else:
+                    print("Consumidor: subscribed to",msg["topic"])
+                    topic = msg["topic"]
+                    serialize = msg["serialize"]
 
-                if topic not in self.list_topic:
-                    self.put_topic(topic, None)
-                    
-                self.subscribe(topic, conn, serialize)
-                print(self.list_subscriptions(topic))
-                #value = self.get_topic(topic)
-                #msg = CDProto.message(value, topic, MType.CONSUMER.value, serialize)
-                #CDProto.send_msg(conn, msg, serialize)         
+                    if topic not in self.list_topic:
+                        self.put_topic(topic, None)
+                        
+                    self.subscribe(topic, conn, serialize)
+                    #value = self.get_topic(topic)
+                    #msg = CDProto.message(value, topic, MType.CONSUMER.value, serialize)
+                    #CDProto.send_msg(conn, msg, serialize)       
             
             # Producer handling
             else:

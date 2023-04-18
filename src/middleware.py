@@ -66,6 +66,10 @@ class JSONQueue(Queue):
         
         return (topic, value)
 
+    def cancel(self):
+        message = CDProto.unsubscribe(self._tipo.value, Serializer.JSON.value)
+        CDProto.send_msg(self.sock, message, Serializer.JSON.value)
+
 class XMLQueue(Queue):
     """Queue implementation with XML based serialization."""
 
@@ -101,3 +105,7 @@ class PickleQueue(Queue):
         value = msg["value"]
 
         return (topic, value)
+
+    def cancel(self):
+        message = CDProto.unsubscribe(Serializer.PICKLE.value)
+        CDProto.send_msg(self.sock, message, Serializer.PICKLE.value)

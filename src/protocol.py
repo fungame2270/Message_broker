@@ -30,11 +30,10 @@ class SubscribeMessage(Message):
         self.message["serialize"] = serialize
 
 class UnsubscribeMessage(Message):
-    #Message to join a topic
-    def __init__(self, command, topic, tipo, serialize):
+    #Message to unjoin a topic
+    def __init__(self, command, tipo, serialize):
         self.serialize = serialize
         self.message = {"command":command}
-        self.message["topic"] = topic
         self.message["type"] = tipo
         self.message["serialize"] = serialize
     
@@ -53,6 +52,11 @@ class CDProto:
     def subscribe(cls, topic: str, tipo, serialize) -> SubscribeMessage:
         # Creates a JoinMessage object and returns object
         return SubscribeMessage("subscribe", topic, tipo, serialize)
+    
+    @classmethod
+    def unsubscribe(cls, tipo, serialize) -> UnsubscribeMessage:
+        # Create a UnsubscribeMessage object and returns object 
+        return UnsubscribeMessage("unsubscribe", tipo, serialize)
 
     @classmethod
     def message(cls, value: str, topic: str, tipo: str,serialize) -> TextMessage:
@@ -75,6 +79,8 @@ class CDProto:
             message = Json_P.recv_msg(connection)
         elif serialize == Serializer.PICKLE.value:
             message = Pickle_P.recv_msg(connection)
+        else:
+            print("XML") 
 
         
        
@@ -83,7 +89,10 @@ class CDProto:
 
         # selecting message type
         if message["command"] == "subscribe":
-            return CDProto.subscribe(message["topic"], message["type"], message["serialize"]);
+            return CDProto.subscribe(message["topic"], message["type"], message["serialize"])
+
+        if message["command"] == "unsubscribe":
+            return CDProto.unsubscribe(message["type"], message["serialize"])
     
         elif message["command"] == "value":
             return CDProto.message(message["value"], message["topic"], message["type"], message["serialize"])

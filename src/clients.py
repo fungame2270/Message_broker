@@ -19,6 +19,7 @@ class Consumer:
             topic, data = self.queue.pull()
             self.logger.info("%s: %s", topic, data)
             self.received.append(data)
+        self.queue.cancel()
 
 
 class Producer:
