@@ -76,7 +76,6 @@ class CDProto:
     @classmethod
     def recv_msg(cls, connection: socket) -> Message:
         serialize = int.from_bytes(connection.recv(1), 'big')
-
         if serialize == Serializer.JSON.value:
             message = Json_P.recv_msg(connection)
         elif serialize == Serializer.PICKLE.value:

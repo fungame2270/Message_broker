@@ -6,11 +6,11 @@ from src.protocols.Serializer import Serializer
 class Message:
     #Message Type.
     @classmethod
-    def xmlStringtoDict(string):
+    def xmlStringtoDict(cls,string):
         mark = xml.fromstring(string)
         msg = {}
         for child in mark:
-            msg[child.tag] = child.attrib
+            msg[child.tag] = child.text
         return msg
 
     def __str__(self):
@@ -29,9 +29,9 @@ class SubscribeMessage(Message):
         child = xml.SubElement(self.msg, "topic")
         child.text = topic
         child = xml.SubElement(self.msg, "type")
-        child.text = tipo
+        child.text = str(tipo)
         child = xml.SubElement(self.msg, "serialize")
-        child.text = serialize
+        child.text = str(serialize)
 
 class UnsubscribeMessage(Message):
     #Message to unjoin a topic
@@ -41,9 +41,9 @@ class UnsubscribeMessage(Message):
         child = xml.SubElement(self.msg, "command")
         child.text = command
         child = xml.SubElement(self.msg, "type")
-        child.text = tipo
+        child.text = str(tipo)
         child = xml.SubElement(self.msg, "serialize")
-        child.text = serialize
+        child.text = str(serialize)
     
 class TextMessage(Message):
     #Message to chat with other clients.
@@ -53,13 +53,16 @@ class TextMessage(Message):
         child = xml.SubElement(self.msg, "command")
         child.text = command
         child = xml.SubElement(self.msg, "value")
-        child.text = value
+        child.text = str(value)
         child = xml.SubElement(self.msg, "topic")
         child.text = topic
         child = xml.SubElement(self.msg, "type")
-        child.text = tipo
+        child.text = str(tipo)
         child = xml.SubElement(self.msg, "serialize")
-        child.text = serialize
+        child.text = str(serialize)
+    
+    def getXml(self):
+        return self.msg
 
 class Xml_P:
     @classmethod
@@ -79,12 +82,11 @@ class Xml_P:
 
 
     @classmethod
-    def send_msg(cls, connection: socket, msg):
+    def send_msg(cls, connection: socket, msg: Message):
         #Sends through a connection a Message object.
-
         serialize = Serializer.XML.value
         serialize = serialize.to_bytes(1, 'big')
-        messageToSend = xml.tostring(msg.getXml)
+        messageToSend = xml.tostring(msg.getXml())
         messageSize = len(messageToSend)
 
         byteMessage = messageSize.to_bytes(2, 'big');

@@ -84,7 +84,7 @@ class XMLQueue(Queue):
 
     def push(self, value):
         # Producer sends data to broker.
-        message = CDProto.message(value, self.topic, self._tipo.value, Serializer.PICKLE.value)
+        message = Xml_P.message(value, self.topic, self._tipo.value, Serializer.XML.value)
         CDProto.send_msg(self.sock, message, Serializer.XML.value)
         pass
 
@@ -100,7 +100,7 @@ class XMLQueue(Queue):
 
     def cancel(self):
         # Cancel subscription
-        message = Xml_P.unsubscribe(Serializer.XML.value)
+        message = Xml_P.unsubscribe(self._tipo.value,Serializer.XML.value)
         CDProto.send_msg(self.sock, message, Serializer.XML.value)
 
 class PickleQueue(Queue):
@@ -130,5 +130,5 @@ class PickleQueue(Queue):
 
     def cancel(self):
         # Cancel subscription
-        message = CDProto.unsubscribe(Serializer.PICKLE.value)
+        message = CDProto.unsubscribe(self._tipo.value,Serializer.PICKLE.value)
         CDProto.send_msg(self.sock, message, Serializer.PICKLE.value)

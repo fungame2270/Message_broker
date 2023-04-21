@@ -5,6 +5,7 @@ import socket
 import selectors
 
 from src.protocol import CDProto
+from src.protocols.xml_protocol import Xml_P 
 from src.middleware import MiddlewareType as MType
 
 class Serializer(enum.Enum):
@@ -92,7 +93,7 @@ class Broker:
             msg = data.getMessage()
             
             # Consumer handling
-            if msg["type"] == MType.CONSUMER.value:
+            if int(msg["type"]) == MType.CONSUMER.value:
                 
                 # Unsubscribe handling
                 if msg["command"] == "unsubscribe":
@@ -100,7 +101,7 @@ class Broker:
                 else:
                     print("Consumidor: subscribed to",msg["topic"])
                     topic = msg["topic"]
-                    serialize = msg["serialize"]
+                    serialize = int(msg["serialize"])
 
                     if topic not in self.list_topic:
                         self.put_topic(topic, None)
@@ -119,8 +120,11 @@ class Broker:
                 
                 for sub in self.list_subscription:
                     if topic == sub[0]:
-                        print('send to',sub[1],msg)
-                        msg = CDProto.message(value, topic, MType.CONSUMER.value, sub[2])
+                        print('send to',sub[1])
+                        if (sub[2] == Serializer.XML.value):
+                            msg = Xml_P.message(value, topic, MType.CONSUMER.value, sub[2])
+                        else:
+                            msg = CDProto.message(value, topic, MType.CONSUMER.value, sub[2])
                         CDProto.send_msg(sub[1], msg, sub[2])
                         
         else:

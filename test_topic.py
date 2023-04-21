@@ -12,8 +12,16 @@ child.text = "tipo"
 child = xml.SubElement(msg, "serialize")
 child.text = "serialize"
 
+print(xml.tostring(msg))
+
 gg = {}
 for child in msg:
     print(child.tag, child.text)
     gg[child.tag] = child.text
 print(gg)
+
+string = 'booga'
+print(str(string))
+
+numb = str(1)
+print(int(numb))
