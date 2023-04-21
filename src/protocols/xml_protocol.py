@@ -35,7 +35,7 @@ class SubscribeMessage(Message):
 
 class UnsubscribeMessage(Message):
     #Message to unjoin a topic
-    def __init__(self, command, tipo, serialize):
+    def __init__(self, command, tipo, serialize, topic):
         self.serialize = serialize
         self.msg = xml.Element("msg")
         child = xml.SubElement(self.msg, "command")
@@ -44,6 +44,8 @@ class UnsubscribeMessage(Message):
         child.text = str(tipo)
         child = xml.SubElement(self.msg, "serialize")
         child.text = str(serialize)
+        child = xml.SubElement(self.msg, "topic")
+        child.text = topic       
     
 class TextMessage(Message):
     #Message to chat with other clients.
@@ -71,9 +73,9 @@ class Xml_P:
         return SubscribeMessage("subscribe", topic, tipo, serialize)
     
     @classmethod
-    def unsubscribe(cls, tipo, serialize) -> UnsubscribeMessage:
+    def unsubscribe(cls, tipo, serialize, topic) -> UnsubscribeMessage:
         # Create a UnsubscribeMessage object and returns object 
-        return UnsubscribeMessage("unsubscribe", tipo, serialize)
+        return UnsubscribeMessage("unsubscribe", tipo, serialize, topic)
 
     @classmethod
     def message(cls, value: str, topic: str, tipo: str,serialize) -> TextMessage:

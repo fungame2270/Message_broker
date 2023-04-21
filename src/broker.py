@@ -7,6 +7,7 @@ import selectors
 from src.protocol import CDProto
 from src.protocols.xml_protocol import Xml_P 
 from src.middleware import MiddlewareType as MType
+from src.protocols.topic_Tree import Node
 
 class Serializer(enum.Enum):
     """Possible message serializers."""
@@ -31,50 +32,45 @@ class Broker:
 
         self.sel = selectors.DefaultSelector()
 
-        self.list_topic = {}
-        self.list_subscription = []
+        self.topic_nodes = Node("root", None)
 
         # wait register event to accept
         self.sel.register(self.sock, selectors.EVENT_READ, Broker.accept);  
 
+
     def list_topics(self) -> List[str]:
         """Returns a list of strings containing all topics containing values."""
-        return list(self.list_topic.keys())
+        return list(self.topic_nodes.getTopicsWithValue())
+
 
     def get_topic(self, topic):
         """Returns the currently stored value in topic."""
-        return self.list_topic.get(topic)
+        return self.topic_nodes.getNode(topic).value
 
 
     def put_topic(self, topic, value):
         """Store in topic the value."""
-        self.list_topic[topic] = value
+        self.topic_nodes.getNode(topic).value = value
+
 
     def list_subscriptions(self, topic: str) -> List[Tuple[socket.socket, Serializer]]:
         """Provide list of subscribers to a given topic."""
         ret_list = []
-        for element in self.list_subscription:
-            if element[0] == topic:
-                ret_list.append((element[1], element[2]))
+
+        for element in self.topic_nodes.getNode(topic).clientList:
+            ret_list.append((element[1], element[2]))
         return ret_list
+
 
     def subscribe(self, topic: str, address: socket.socket, _format: Serializer = None):
         """Subscribe to topic by client in address."""
-        self.list_subscription.append((topic, address, _format))
+        node = self.topic_nodes.getNode(topic)
+        node.add((topic, address, _format))
+
 
     def unsubscribe(self, topic, address):
         """Unsubscribe to topic by client in address."""
-        for element in self.list_subscription:
-            if(element[0] == topic and element[1] == address):
-                break
-        self.list_subscription.remove(element)
-
-    def unsubscribeConn(self, address):
-        """Unsubscribe to topic by client in address."""
-        for element in self.list_subscription:
-            if(element[1] == address):
-                break
-        self.list_subscription.remove(element)
+        self.topic_nodes.getNode(topic).unsubscribe(address)
 
 
     # --------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -94,22 +90,20 @@ class Broker:
             
             # Consumer handling
             if int(msg["type"]) == MType.CONSUMER.value:
-                
+                topic = msg["topic"]
+
                 # Unsubscribe handling
                 if msg["command"] == "unsubscribe":
-                    self.unsubscribeConn(conn)
+                    self.unsubscribe(topic, conn)
                 else:
                     print("Consumidor: subscribed to",msg["topic"])
-                    topic = msg["topic"]
+                    
                     serialize = int(msg["serialize"])
 
-                    if topic not in self.list_topic:
-                        self.put_topic(topic, None)
+                    self.put_topic(topic,None)
                         
                     self.subscribe(topic, conn, serialize)
-                    #value = self.get_topic(topic)
-                    #msg = CDProto.message(value, topic, MType.CONSUMER.value, serialize)
-                    #CDProto.send_msg(conn, msg, serialize)       
+     
             
             # Producer handling
             else:
@@ -117,15 +111,17 @@ class Broker:
                 topic = msg["topic"]
                 value = msg["value"]
                 self.put_topic(topic, value)
+
+                node = self.topic_nodes.getNode(topic)
+                subs = node.getClients(clients=set())
                 
-                for sub in self.list_subscription:
-                    if topic == sub[0]:
-                        print('send to',sub[1])
-                        if (sub[2] == Serializer.XML.value):
-                            msg = Xml_P.message(value, topic, MType.CONSUMER.value, sub[2])
-                        else:
-                            msg = CDProto.message(value, topic, MType.CONSUMER.value, sub[2])
-                        CDProto.send_msg(sub[1], msg, sub[2])
+                for sub in subs:
+                    print('send to',sub[1])
+                    if (sub[2] == Serializer.XML.value):
+                        msg = Xml_P.message(value, topic, MType.CONSUMER.value, sub[2])
+                    else:
+                        msg = CDProto.message(value, topic, MType.CONSUMER.value, sub[2])
+                    CDProto.send_msg(sub[1], msg, sub[2])
                         
         else:
             self.sel.unregister(conn)

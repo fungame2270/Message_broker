@@ -70,7 +70,7 @@ class JSONQueue(Queue):
 
     def cancel(self):
         # Cancel subscription
-        message = CDProto.unsubscribe(self._tipo.value, Serializer.JSON.value)
+        message = CDProto.unsubscribe(self._tipo.value, Serializer.JSON.value, self.topic)
         CDProto.send_msg(self.sock, message, Serializer.JSON.value)
 
 class XMLQueue(Queue):
@@ -100,7 +100,7 @@ class XMLQueue(Queue):
 
     def cancel(self):
         # Cancel subscription
-        message = Xml_P.unsubscribe(self._tipo.value,Serializer.XML.value)
+        message = Xml_P.unsubscribe(self._tipo.value,Serializer.XML.value, self.topic)
         CDProto.send_msg(self.sock, message, Serializer.XML.value)
 
 class PickleQueue(Queue):
@@ -130,5 +130,5 @@ class PickleQueue(Queue):
 
     def cancel(self):
         # Cancel subscription
-        message = CDProto.unsubscribe(self._tipo.value,Serializer.PICKLE.value)
+        message = CDProto.unsubscribe(self._tipo.value, Serializer.PICKLE.value, self.topic)
         CDProto.send_msg(self.sock, message, Serializer.PICKLE.value)

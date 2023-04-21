@@ -31,11 +31,12 @@ class SubscribeMessage(Message):
 
 class UnsubscribeMessage(Message):
     #Message to unjoin a topic
-    def __init__(self, command, tipo, serialize):
+    def __init__(self, command, tipo, serialize, topic):
         self.serialize = serialize
         self.message = {"command":command}
         self.message["type"] = tipo
         self.message["serialize"] = serialize
+        self.message["topic"] = topic
     
 class TextMessage(Message):
     #Message to chat with other clients.
@@ -54,9 +55,9 @@ class CDProto:
         return SubscribeMessage("subscribe", topic, tipo, serialize)
     
     @classmethod
-    def unsubscribe(cls, tipo, serialize) -> UnsubscribeMessage:
+    def unsubscribe(cls, tipo, serialize, topic) -> UnsubscribeMessage:
         # Create a UnsubscribeMessage object and returns object 
-        return UnsubscribeMessage("unsubscribe", tipo, serialize)
+        return UnsubscribeMessage("unsubscribe", tipo, serialize, topic)
 
     @classmethod
     def message(cls, value: str, topic: str, tipo: str,serialize) -> TextMessage:
@@ -93,7 +94,7 @@ class CDProto:
             return CDProto.subscribe(message["topic"], message["type"], message["serialize"])
 
         if message["command"] == "unsubscribe":
-            return CDProto.unsubscribe(message["type"], message["serialize"])
+            return CDProto.unsubscribe(message["type"], message["serialize"], message["topic"])
     
         elif message["command"] == "value":
             return CDProto.message(message["value"], message["topic"], message["type"], message["serialize"])
