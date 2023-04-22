@@ -26,11 +26,16 @@ class Node:
     def getNode(self,newNode):
         """Returns node if exists. Otherwise creates a new one"""
         if type(newNode) != list:
-            newNode = newNode.split("/")
-            if len(newNode) > 1:
-                newNode.pop(0)
-        
-    
+            c = 1
+            split = []
+            lastindex = 0
+            for letter in newNode[1:]:
+                if letter == "/":
+                    split.append(newNode[lastindex:c])
+                    lastindex = c
+                c += 1
+            split.append(newNode[lastindex:])
+            newNode = split
         node = self.returnInnerNode(newNode[0])
         if len(newNode) > 1:
             if(node != None):
@@ -74,5 +79,5 @@ class Node:
     def getName(self):
         if self.parent == None:
             return ""
-        return self.parent.getName() + "/" + self.name
+        return self.parent.getName() + self.name
             

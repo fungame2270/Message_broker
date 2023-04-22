@@ -1,27 +1,19 @@
-import xml.etree.ElementTree as xml
+from src.protocols.topic_Tree import Node
 
-msg = xml.Element("msg")
-child = xml.SubElement(msg, "command")
-child.text = "command"
-child = xml.SubElement(msg, "value")
-child.text = "value"
-child = xml.SubElement(msg, "topic")
-child.text = "topic"
-child = xml.SubElement(msg, "type")
-child.text = "tipo"
-child = xml.SubElement(msg, "serialize")
-child.text = "serialize"
+root = Node("root", None)
 
-print(xml.tostring(msg))
+#root.getNode("/weather/tmp/c")
 
-gg = {}
-for child in msg:
-    print(child.tag, child.text)
-    gg[child.tag] = child.text
-print(gg)
+topic = "arroz/temp"
+c = 1
+split = []
+lastindex = 0
+for letter in topic[1:]:
+    if letter == "/":
+        split.append(topic[lastindex:c])
+        lastindex = c
+    c += 1
+split.append(topic[lastindex:])
 
-string = 'booga'
-print(str(string))
-
-numb = str(1)
-print(int(numb))
+print(split)
+        
