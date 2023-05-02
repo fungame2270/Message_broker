@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "GitHub Evaluation",
+      "setup": "sudo -H pip3 install pytest pytest-timeout",
+      "run": "pytest -vv",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 10,
+      "points": null
+    }
+  ]
+}
